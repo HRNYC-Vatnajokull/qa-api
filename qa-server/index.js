@@ -5,13 +5,43 @@ const { paginate } = require('./utils.js');
 
 const app = express();
 
-app.get('/qa/:productId', (req, res) => {
-  const {
-    params: { productId },
-    query: { page, count },
-  } = req;
+// TODO: consider refactoring to a stream and using parallel execution
+app.get('/qa/:productId', async (req, res) => {
+  let productId = req.params.productId;
 
-  res.send(productId);
+  let questions = await Model.getQuestionsByProduct(productId);
+
+  questions = paginate(
+    questions.sort((a, b) => b.question_helpfulness - a.question_helpfulness),
+    +req.query.page,
+    +req.query.count
+  );
+
+  const answers = await Model.getAnswersByQuestions(questions.map((question) => question.question_id));
+
+  for (const question of questions) {
+    question.question_date = question.question_date.date;
+    question.answers = {};
+
+    for (answer of answers) {
+      if (answer.question_id === question.question_id) {
+        let { id, body, date, answerer_name, helpfulness, photos } = answer;
+        question.answers[id] = {
+          id,
+          body,
+          date: date.date,
+          answerer_name,
+          helpfulness,
+          photos,
+        };
+      }
+    }
+  }
+
+  res.send({
+    product_id: productId,
+    results: questions,
+  });
 });
 
 app.get('/qa/:questionId/answers', (req, res) => {
