@@ -95,7 +95,43 @@ app.post('/qa/:questionId/answers', (req, res) => {
   }
 
   Model.postAnswer({ questionId, answererEmail: email, answererName: name, body, photos })
-    .then(res.sendStatus(201))
+    .then(() => res.sendStatus(201))
+    .catch((err) => {
+      console.error(err);
+      res.sendStatus(500);
+    });
+});
+
+app.put('/qa/question/:questionId/helpful', (req, res) => {
+  Model.markQuestionHelpful(req.params.questionId)
+    .then(() => res.sendStatus(204))
+    .catch((err) => {
+      console.error(err);
+      res.sendStatus(500);
+    });
+});
+
+app.put('/qa/question/:questionId/report', (req, res) => {
+  Model.reportQuestion(req.params.questionId)
+    .then(() => res.sendStatus(204))
+    .catch((err) => {
+      console.error(err);
+      res.sendStatus(500);
+    });
+});
+
+app.put('/qa/answer/:answerId/helpful', (req, res) => {
+  Model.markAnswerHelpful(req.params.answerId)
+    .then(() => res.sendStatus(204))
+    .catch((err) => {
+      console.error(err);
+      res.sendStatus(500);
+    });
+});
+
+app.put('/qa/answer/:answerId/report', (req, res) => {
+  Model.reportAnswer(req.params.answerId)
+    .then(() => res.sendStatus(204))
     .catch((err) => {
       console.error(err);
       res.sendStatus(500);
