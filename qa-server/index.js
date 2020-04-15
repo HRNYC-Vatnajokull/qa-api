@@ -74,11 +74,32 @@ app.get('/qa/:questionId/answers', (req, res) => {
 app.post('/qa/:productId', (req, res) => {
   const productId = req.params.productId;
   const { body, name, email } = req.body;
-  if (!productId || !body || !name || !email) res.status(400).send('productId, body, name, and email are all required');
+
+  if (!productId || !body || !name || !email) {
+    res.status(400).send('productId, body, name, and email are all required');
+    return;
+  }
 
   Model.postQuestion({ productId, askerEmail: email, askerName: name, body })
     .then(res.sendStatus(201))
     .catch((err) => res.sendStatus(500));
+});
+
+app.post('/qa/:questionId/answers', (req, res) => {
+  const questionId = req.params.questionId;
+  const { body, name, email, photos } = req.body;
+
+  if (!questionId || !body || !name || !email) {
+    res.status(400).send('questionId, body, name, and email are all required');
+    return;
+  }
+
+  Model.postAnswer({ questionId, answererEmail: email, answererName: name, body, photos })
+    .then(res.sendStatus(201))
+    .catch((err) => {
+      console.error(err);
+      res.sendStatus(500);
+    });
 });
 
 app.listen(3000);
