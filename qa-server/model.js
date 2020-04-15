@@ -18,6 +18,16 @@ const db = require('./db.js');
 //   }
 // };
 
+const getQuestionParams = async (questionId) => {
+  const q = `select product_id, question_date, question_id from qa.questions where question_id=?`;
+  return (await db.execute(q, [questionId], { prepare: true })).first();
+};
+
+const getAnswerParams = async (answerId) => {
+  const q = `select question_id, answer_date, answer_id from qa.answers where answer_id=?`;
+  return (await db.execute(q, [answerId], { prepare: true })).first();
+};
+
 module.exports = {
   getQuestionsByProduct: function (productId) {
     const q = `
@@ -102,11 +112,63 @@ module.exports = {
       });
   },
 
-  markAnswerHelpful: function (answerId) {},
+  markQuestionHelpful: async function (questionId) {
+    const questionParams = await getQuestionParams(questionId);
 
-  reportAnswer: function (answerId) {},
+    const qGet = `
+      select helpful from qa.questions_by_product 
+      where product_id=:product_id and question_date=:question_date and question_id=:question_id`;
+    const { helpful } = (await db.execute(qGet, questionParams, { prepare: true })).first();
 
-  markQuestionHelpful: function (questionId) {},
+    const qUpdate = `
+      update qa.questions_by_product set helpful = :helpful
+      where product_id=:product_id and question_date=:question_date and question_id=:question_id`;
 
-  reportQuestion: function (questionId) {},
+    return db.execute(qUpdate, { ...questionParams, helpful: helpful + 1 }, { prepare: true });
+  },
+
+  reportQuestion: async function (questionId) {
+    const questionParams = await getQuestionParams(questionId);
+
+    const qGet = `
+      select reported from qa.questions_by_product 
+      where product_id=:product_id and question_date=:question_date and question_id=:question_id`;
+    const { reported } = (await db.execute(qGet, questionParams, { prepare: true })).first();
+
+    const qUpdate = `
+      update qa.questions_by_product set reported = :reported
+      where product_id=:product_id and question_date=:question_date and question_id=:question_id`;
+
+    return db.execute(qUpdate, { ...questionParams, reported: reported + 1 }, { prepare: true });
+  },
+
+  markAnswerHelpful: async function (answerId) {
+    const answerParams = await getAnswerParams(answerId);
+
+    const qGet = `
+      select helpful from qa.answers_by_question 
+      where question_id=:question_id and answer_date=:answer_date and answer_id=:answer_id`;
+    const { helpful } = (await db.execute(qGet, answerParams, { prepare: true })).first();
+
+    const qUpdate = `
+      update qa.answers_by_question set helpful = :helpful
+      where question_id=:question_id and answer_date=:answer_date and answer_id=:answer_id`;
+
+    return db.execute(qUpdate, { ...answerParams, helpful: helpful + 1 }, { prepare: true });
+  },
+
+  reportAnswer: async function (answerId) {
+    const answerParams = await getAnswerParams(answerId);
+
+    const qGet = `
+      select reported from qa.answers_by_question 
+      where question_id=:question_id and answer_date=:answer_date and answer_id=:answer_id`;
+    const { reported } = (await db.execute(qGet, answerParams, { prepare: true })).first();
+
+    const qUpdate = `
+      update qa.answers_by_question set reported = :reported
+      where question_id=:question_id and answer_date=:answer_date and answer_id=:answer_id`;
+
+    return db.execute(qUpdate, { ...answerParams, reported: reported + 1 }, { prepare: true });
+  },
 };
