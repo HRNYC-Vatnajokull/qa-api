@@ -1,9 +1,11 @@
 const express = require('express');
+const bodyParser = require('body-parser').json;
 
 const Model = require('./model.js');
 const { paginate } = require('./utils.js');
 
 const app = express();
+app.use(bodyParser());
 
 // TODO: consider refactoring to a stream and using parallel execution
 app.get('/qa/:productId', async (req, res) => {
@@ -67,6 +69,16 @@ app.get('/qa/:questionId/answers', (req, res) => {
       })),
     });
   });
+});
+
+app.post('/qa/:productId', (req, res) => {
+  const productId = req.params.productId;
+  const { body, name, email } = req.body;
+  if (!productId || !body || !name || !email) res.status(400).send('productId, body, name, and email are all required');
+
+  Model.postQuestion({ productId, askerEmail: email, askerName: name, body })
+    .then(res.sendStatus(201))
+    .catch((err) => res.sendStatus(500));
 });
 
 app.listen(3000);
