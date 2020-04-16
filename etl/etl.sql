@@ -53,6 +53,15 @@ create table stg.answer_photos (
   , primary key (answer_id, id)
 );
 
+-- create table qa.next_id
+create table qa.next_id (
+  type text primary key,
+  next_id counter
+);
+update qa.next_id set next_id = next_id+5000000 where type='question_id';
+update qa.next_id set next_id = next_id+50000000 where type='answer_id';
+insert into qa.next_id (type, next_id) values ('answer_id', 50000000);
+
 
 
 -- ******************** PERFORM DATA LOADING ********************
