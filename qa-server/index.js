@@ -1,49 +1,59 @@
 const express = require('express');
 const bodyParser = require('body-parser').json;
+const morgan = require('morgan');
+const cors = require('cors');
 
 const Model = require('./model.js');
 const { paginate } = require('./utils.js');
 
 const app = express();
 app.use(bodyParser());
+app.use(morgan('dev'));
+app.use(cors());
 
 // TODO: consider refactoring to a stream and using parallel execution
 app.get('/qa/:productId', async (req, res) => {
-  let productId = req.params.productId;
+  try {
+    let productId = req.params.productId;
 
-  let questions = await Model.getQuestionsByProduct(productId);
+    let questions = await Model.getQuestionsByProduct(productId);
 
-  questions = paginate(
-    questions.sort((a, b) => b.question_helpfulness - a.question_helpfulness),
-    +req.query.page,
-    +req.query.count
-  );
+    questions = paginate(
+      questions.sort((a, b) => b.question_helpfulness - a.question_helpfulness),
+      req.query.page,
+      req.query.count
+    );
 
-  const answers = await Model.getAnswersByQuestions(questions.map((question) => question.question_id));
+    let answers = await Model.getAnswersByQuestions(questions.map((question) => question.question_id));
 
-  for (const question of questions) {
-    question.question_date = question.question_date.date;
-    question.answers = {};
+    for (const question of questions) {
+      question.question_date = question.question_date.date;
+      question.answers = {};
 
-    for (answer of answers) {
-      if (answer.question_id === question.question_id) {
-        let { id, body, date, answerer_name, helpfulness, photos } = answer;
-        question.answers[id] = {
-          id,
-          body,
-          date: date.date,
-          answerer_name,
-          helpfulness,
-          photos,
-        };
+      for (answer of answers) {
+        if (answer.question_id === question.question_id) {
+          let { id, body, date, answerer_name, helpfulness, photos } = answer;
+          question.answers[id] = {
+            id,
+            body,
+            date: date.date,
+            answerer_name,
+            helpfulness,
+            photos: photos || [],
+          };
+        }
       }
     }
-  }
 
-  res.send({
-    product_id: productId,
-    results: questions,
-  });
+    res.send({
+      product_id: productId,
+      results: questions,
+    });
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+    return;
+  }
 });
 
 app.get('/qa/:questionId/answers', (req, res) => {

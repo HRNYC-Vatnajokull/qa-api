@@ -1,4 +1,6 @@
 const paginate = (array, page = paginate.DEFAULT_PAGE, count = paginate.DEFAULT_COUNT) => {
+  page = +page;
+  count = +count;
   return array.slice((page - 1) * count, (page - 1) * count + count);
 };
 

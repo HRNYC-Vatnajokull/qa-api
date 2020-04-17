@@ -44,7 +44,15 @@ module.exports = {
       from qa.answers_by_question
       where question_id = ?`;
 
-    return db.execute(q, [questionId], { prepare: true }).then((result) => result.rows);
+    return db
+      .execute(q, [questionId], { prepare: true })
+      .then((result) => result.rows)
+      .catch((err) => {
+        {
+          console.error('questionId: ', questionId);
+          throw err;
+        }
+      });
   },
 
   getAnswersByQuestions: function (questionIds) {
@@ -53,7 +61,16 @@ module.exports = {
       from qa.answers_by_question
       where question_id in ?`;
 
-    return db.execute(q, [questionIds], { prepare: true }).then((result) => result.rows);
+    return db
+      .execute(q, [['', ...questionIds]], { prepare: true })
+      .then((result) => result.rows)
+      .catch((err) => {
+        {
+          console.error('questionIds: ', questionIds);
+          console.error(err);
+          throw err;
+        }
+      });
   },
 
   postQuestion: function ({ productId, askerEmail, askerName, body }) {
