@@ -149,3 +149,4 @@ app.put('/qa/answer/:answerId/report', (req, res) => {
 });
 
 app.listen(3000);
+console.log(`QA service listening on port 3000`);

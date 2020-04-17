@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "debug": "nodemon --inspect-brk qa-api/test.js",
-    "start-test": "nodemon qa-api/test.js"
+    "debug": "nodemon --inspect-brk qa-server/test.js",
+    "start-test": "nodemon qa-server/test.js",
+    "start": "node qa-server/"
   },
   "repository": {
     "type": "git",
