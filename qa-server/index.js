@@ -11,6 +11,12 @@ app.use(bodyParser());
 app.use(morgan('dev'));
 app.use(cors());
 
+if (process.env.LOADER_VERIFY_TOKEN) {
+  app.get(`/${process.env.LOADER_VERIFY_TOKEN}`, (req, res) => {
+    res.send(process.env.LOADER_VERIFY_TOKEN);
+  });
+}
+
 // TODO: consider refactoring to a stream and using parallel execution
 app.get('/qa/:productId', async (req, res) => {
   try {
